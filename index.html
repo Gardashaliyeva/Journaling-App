@@ -4,246 +4,349 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Islamic Daily Journal</title>
-  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/babel-standalone@7.22.5/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Roboto:wght@400;500&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Lato', Arial, sans-serif;
+      background: linear-gradient(135deg, #e8f5e9 0%, #f0f0f0 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2e7d32;
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 1.8em;
+      color: #1b5e20;
+      margin-bottom: 15px;
+    }
+
+    .container {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 20px;
+      border: 1px solid #c8e6c9;
+    }
+
+    p {
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: 'Lato', Arial, sans-serif;
+      font-size: 1em;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #2e7d32;
+      box-shadow: 0 0 5px rgba(46,125,50,0.3);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.1s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    .save-btn {
+      background-color: #2e7d32;
+    }
+
+    .save-btn:hover {
+      background-color: #1b5e20;
+    }
+
+    .history-btn {
+      background-color: #616161;
+    }
+
+    .history-btn:hover {
+      background-color: #424242;
+    }
+
+    .export-btn {
+      background-color: #1976d2;
+    }
+
+    .export-btn:hover {
+      background-color: #115293;
+    }
+
+    .history {
+      display: none;
+    }
+
+    .history.show {
+      display: block;
+    }
+
+    .entry {
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+    }
+
+    .entry:last-child {
+      border-bottom: none;
+    }
+
+    .entry p {
+      font-size: 0.95em;
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        font-size: 2em;
+      }
+
+      h2 {
+        font-size: 1.5em;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      button {
+        font-size: 1em;
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex justify-center items-center">
-  <div id="root" class="w-full max-w-2xl p-6"></div>
-  <script type="text/babel">
+<body>
+  <h1>Islamic Daily Journal</h1>
+  <div class="container">
+    <h2 id="prompt-title">Daily Prompt</h2>
+    <p id="prompt-text"></p>
+    <input type="date" id="date" disabled>
+    <textarea id="reflection" placeholder="Your reflection..." rows="5"></textarea>
+    <textarea id="dua" placeholder="Your dua..." rows="3"></textarea>
+    <button class="save-btn" onclick="saveEntry()">Save Entry</button>
+    <button class="history-btn" onclick="toggleHistory()">Show History</button>
+    <button class="export-btn" onclick="exportEntries()">Export Entries</button>
+  </div>
+  <div class="container history" id="history">
+    <h2>Entry History</h2>
+    <div id="history-list"></div>
+  </div>
+  <script>
     const prompts = [
-      { id: 1, text: "What’s one blessing today I’m thankful for? How does it reflect Allah’s mercy?", theme: "Gratitude", sketch: "heart" },
-      { id: 2, text: "What challenge today taught me to be grateful? How does it reflect Allah’s wisdom?", theme: "Gratitude", sketch: "mountain" },
-      { id: 3, text: "What past dua has Allah answered? How does it boost my hope?", theme: "Gratitude", sketch: "star" },
-      { id: 4, text: "What sign of Allah’s guidance did I notice today? How did it shape my day?", theme: "Gratitude", sketch: "path" },
-      { id: 5, text: "Where did I see Allah’s blessings in my time today? How can I seek more barakah?", theme: "Gratitude", sketch: "sun" },
-      { id: 6, text: "How did my body serve me today? How did I thank Allah for it?", theme: "Gratitude", sketch: "foot" },
-      { id: 7, text: "What simple moment brought me joy today? How does it show Allah’s grace?", theme: "Gratitude", sketch: "cup" },
-      { id: 8, text: "What gave me hope in a tough moment today? How does it reflect Allah’s promise?", theme: "Gratitude", sketch: "sunrise" },
-      { id: 9, text: "What small gift in nature did I notice today? How does it praise Allah?", theme: "Gratitude", sketch: "flower" },
-      { id: 10, text: "What kindness from someone warmed my heart today? How did I return it?", theme: "Gratitude", sketch: "smile" },
-      { id: 11, text: "Which ayah spoke to my heart today? How can I live it?", theme: "Quran", sketch: "book" },
-      { id: 12, text: "Which Sunnah did I follow today? How can I adopt another tomorrow?", theme: "Quran", sketch: "prayer rug" },
-      { id: 13, text: "What Quranic verse or hadith inspired me today? How can I apply it?", theme: "Quran", sketch: "heart" },
-      { id: 14, text: "Which of Allah’s Names resonated today? How did I see it in my life?", theme: "Quran", sketch: "hand" },
-      { id: 15, text: "What ayah guided my actions today? How can I embody it?", theme: "Quran", sketch: "light" },
-      { id: 16, text: "What question about Islam or life did I explore today? What’s one thing I learned?", theme: "Quran", sketch: "book" },
-      { id: 17, text: "What Prophetic story touched me today? How can I emulate its lesson?", theme: "Quran", sketch: "chain" },
-      { id: 18, text: "What Quranic promise gave me strength today? How did it shape my actions?", theme: "Quran", sketch: "door" },
-      { id: 19, text: "What Sunnah of kindness did I practice today? How can I expand it?", theme: "Quran", sketch: "hand" },
-      { id: 20, text: "What dua from the Quran or Sunnah did I recite today? How did it comfort me?", theme: "Quran", sketch: "scroll" },
-      { id: 21, text: "What mistake did I make today? How can I seek Allah’s forgiveness?", theme: "Self-Reflection", sketch: "raindrop" },
-      { id: 22, text: "What temptation did I resist today? How can I stay stronger?", theme: "Self-Reflection", sketch: "shield" },
-      { id: 23, text: "What habit am I working on? How does it align with ihsan?", theme: "Self-Reflection", sketch: "arrow" },
-      { id: 24, text: "What reminded me to stay humble today? How can I embody it more?", theme: "Self-Reflection", sketch: "earth" },
-      { id: 25, text: "When did I choose silence over speech today? How did it honor Allah?", theme: "Self-Reflection", sketch: "closed door" },
-      { id: 26, text: "What words did I speak today that pleased Allah? How can I be more intentional?", theme: "Self-Reflection", sketch: "speech bubble" },
-      { id: 27, text: "When did I feel envy today? How did I redirect it to dua or gratitude?", theme: "Self-Reflection", sketch: "flower" },
-      { id: 28, text: "What distracted me today? How can I refocus on Allah’s path?", theme: "Self-Reflection", sketch: "hourglass" },
-      { id: 29, text: "What negative thought did I challenge today? How did I replace it with hope?", theme: "Self-Reflection", sketch: "light" },
-      { id: 30, text: "What choice showed my growth today? How does it honor Allah?", theme: "Self-Reflection", sketch: "scale" },
-      { id: 31, text: "What challenge tested my sabr today? How did I show patience like Gazans?", theme: "Patience", sketch: "rock" },
-      { id: 32, text: "What tested my sabr today? How did I respond, and how can I grow?", theme: "Patience", sketch: "tree" },
-      { id: 33, text: "What worry can I surrender to Allah today? How did trusting Him feel?", theme: "Patience", sketch: "cloud" },
-      { id: 34, text: "What hardship today held a hidden blessing? How did Allah show mercy?", theme: "Patience", sketch: "flower" },
-      { id: 35, text: "What event today reminded me of Allah’s perfect plan? How did I embrace it?", theme: "Patience", sketch: "star" },
-      { id: 36, text: "When did I stand for truth or faith today? What gave me strength?", theme: "Patience", sketch: "lion" },
-      { id: 37, text: "What strengthened my imaan today? How can I hold firm tomorrow?", theme: "Patience", sketch: "fortress" },
-      { id: 38, text: "What fear did I face today? How did relying on Allah help?", theme: "Patience", sketch: "torch" },
-      { id: 39, text: "What loss did I accept today? How did Allah’s promise comfort me?", theme: "Patience", sketch: "wing" },
-      { id: 40, text: "What delay taught me trust today? How did I find peace in it?", theme: "Patience", sketch: "hourglass" },
-      { id: 41, text: "How did I help someone today, even in a small way? Why was it meaningful?", theme: "Community", sketch: "hand" },
-      { id: 42, text: "What small act of kindness can I plan for tomorrow? Why does it matter?", theme: "Community", sketch: "dove" },
-      { id: 43, text: "How did I strengthen a bond today? What’s one way to support my community?", theme: "Community", sketch: "bridge" },
-      { id: 44, text: "What small act strengthened my ummah today? What’s next?", theme: "Community", sketch: "circle" },
-      { id: 45, text: "How did I care for Allah’s creation today? What’s one act for tomorrow?", theme: "Community", sketch: "leaf" },
-      { id: 46, text: "What quality in someone inspired me today? How can I adopt it?", theme: "Community", sketch: "hand" },
-      { id: 47, text: "How did I give my time to benefit others today? What’s one way to do more?", theme: "Community", sketch: "clock" },
-      { id: 48, text: "What smile did I share today? How did it reflect Prophetic kindness?", theme: "Community", sketch: "smile" },
-      { id: 49, text: "What dua did I make for someone today? How did it connect us?", theme: "Community", sketch: "raised hands" },
-      { id: 50, text: "What act of patience with others did I show today? How did it build love?", theme: "Community", sketch: "heart" },
-      { id: 51, text: "How did I share Islam today, even subtly? What’s one dawah idea for tomorrow?", theme: "Dawah", sketch: "speech bubble" },
-      { id: 52, text: "What new Islamic or beneficial knowledge did I gain today? How will I share it?", theme: "Dawah", sketch: "book" },
-      { id: 53, text: "What small deed did I do for others today? How can I expand it?", theme: "Dawah", sketch: "hand" },
-      { id: 54, text: "How did I show kindness today? How does it reflect Allah’s Rahman?", theme: "Dawah", sketch: "heart" },
-      { id: 55, text: "What good deed today could outlast me? What’s one more to plant?", theme: "Dawah", sketch: "seed" },
-      { id: 56, text: "What deed today was a step toward Jannah? What’s my next step?", theme: "Dawah", sketch: "star" },
-      { id: 57, text: "What example did I set for others today? How did it reflect Islam?", theme: "Dawah", sketch: "light" },
-      { id: 58, text: "What knowledge did I teach someone today? How did it benefit them?", theme: "Dawah", sketch: "lamp" },
-      { id: 59, text: "What positive change did I encourage today? How does it serve Allah?", theme: "Dawah", sketch: "tree" },
-      { id: 60, text: "What dawah opportunity did I seize today? What’s one for tomorrow?", theme: "Dawah", sketch: "megaphone" },
-      { id: 61, text: "What moment of worship felt closest to Allah today? Why?", theme: "Worship", sketch: "mosque" },
-      { id: 62, text: "What deed today was purely for Allah? How can I ensure ikhlas tomorrow?", theme: "Worship", sketch: "candle" },
-      { id: 63, text: "What moment today reminded me to say SubhanAllah or Alhamdulillah? How did it feel?", theme: "Worship", sketch: "feather" },
-      { id: 64, text: "What was my best deed today? How can I thank Allah for enabling it?", theme: "Worship", sketch: "moon" },
-      { id: 65, text: "What dua did I make today with full focus? How did it connect me to Allah?", theme: "Worship", sketch: "raised hand" },
-      { id: 66, text: "What act of ibadah brought me joy today? How can I deepen it?", theme: "Worship", sketch: "crescent moon" },
-      { id: 67, text: "When did I feel Allah’s presence today? How can I seek it again?", theme: "Worship", sketch: "prayer mat" },
-      { id: 68, text: "How did I prepare my heart for salah today? What’s one way to enhance it?", theme: "Worship", sketch: "water drop" },
-      { id: 69, text: "What dhikr calmed my heart today? How can I make it a habit?", theme: "Worship", sketch: "beads" },
-      { id: 70, text: "What salah moment felt most focused today? How can I recreate it?", theme: "Worship", sketch: "sun" },
-      { id: 71, text: "What reminded me of the akhirah today? How did it shift my focus?", theme: "Akhirah", sketch: "hourglass" },
-      { id: 72, text: "What’s one deed today that I hope weighs heavy on my scale? How can I do more?", theme: "Akhirah", sketch: "scale" },
-      { id: 73, text: "What’s one thing I look forward to? How does it connect to my akhirah?", theme: "Akhirah", sketch: "horizon" },
-      { id: 74, text: "What’s one deed I’ll do tomorrow for my akhirah? Why?", theme: "Akhirah", sketch: "gate" },
-      { id: 75, text: "When did I pause to reflect today? How did it bring me closer to Allah?", theme: "Akhirah", sketch: "still lake" },
-      { id: 76, text: "What resource (time, food, etc.) did I use wisely today? How can I improve?", theme: "Akhirah", sketch: "clock" },
-      { id: 77, text: "What protected my heart from negativity today? What’s one way to strengthen it?", theme: "Akhirah", sketch: "shield" },
-      { id: 78, text: "What worldly desire did I let go for Allah today? How did it feel?", theme: "Akhirah", sketch: "feather" },
-      { id: 79, text: "What deed today aligned with my purpose? How can I stay true to it?", theme: "Akhirah", sketch: "compass" },
-      { id: 80, text: "What reminded me of death’s nearness today? How did it guide my choices?", theme: "Akhirah", sketch: "candle" },
-      { id: 81, text: "What action did I perform today solely for Allah’s pleasure? How did it feel?", theme: "Ikhlas", sketch: "candle" },
-      { id: 82, text: "When did I catch myself seeking praise today? How did I redirect to ikhlas?", theme: "Ikhlas", sketch: "eye" },
-      { id: 83, text: "What deed did I do without expecting reward today? How can I do more?", theme: "Ikhlas", sketch: "broom" },
-      { id: 84, text: "How did I ensure my worship was for Allah alone today? What can I improve?", theme: "Ikhlas", sketch: "prayer mat" },
-      { id: 85, text: "What moment tested my sincerity today? How did I renew my intention?", theme: "Ikhlas", sketch: "heart" },
-      { id: 86, text: "What choice today showed my fear of Allah? How did it guide me?", theme: "Taqwa", sketch: "shield" },
-      { id: 87, text: "When did I feel Allah watching me today? How did it shape my behavior?", theme: "Taqwa", sketch: "eye" },
-      { id: 88, text: "What sin did I avoid today for Allah’s sake? How did it strengthen my taqwa?", theme: "Taqwa", sketch: "door" },
-      { id: 89, text: "How did I obey Allah in a small act today? What’s one way to grow in taqwa?", theme: "Taqwa", sketch: "foot" },
-      { id: 90, text: "What reminded me of Allah’s greatness today? How did it inspire taqwa?", theme: "Taqwa", sketch: "star" },
-      { id: 91, text: "What worry did I entrust to Allah today? How did it lighten my heart?", theme: "Tawakkul", sketch: "cloud" },
-      { id: 92, text: "What step did I take with tawakkul today? How did Allah provide?", theme: "Tawakkul", sketch: "path" },
-      { id: 93, text: "When did I say ‘Hasbiyallah’ today? How did it strengthen my reliance?", theme: "Tawakkul", sketch: "hand" },
-      { id: 94, text: "What outcome did I accept as Allah’s will today? How did it build tawakkul?", theme: "Tawakkul", sketch: "wing" },
-      { id: 95, text: "What did I do to seek Allah’s help today? How did it affirm my trust?", theme: "Tawakkul", sketch: "prayer rug" },
+      { id: 1, text: "What’s one blessing today I’m thankful for?", theme: "Gratitude" },
+      { id: 2, text: "How did I show patience in a challenging moment today?", theme: "Patience" },
+      { id: 3, text: "What Quranic verse inspired me today and why?", theme: "Quran" },
+      { id: 4, text: "What’s one act of kindness I performed or witnessed today?", theme: "Community" },
+      { id: 5, text: "How did I seek Allah’s forgiveness today?", theme: "Self-Reflection" },
+      { id: 6, text: "What’s one way I can improve my salah tomorrow?", theme: "Worship" },
+      { id: 7, text: "How did I share the beauty of Islam with someone today?", theme: "Dawah" },
+      { id: 8, text: "What’s one thing I did today to prepare for the Akhirah?", theme: "Akhirah" },
+      { id: 9, text: "What action did I perform today solely for Allah’s pleasure?", theme: "Ikhlas" },
+      { id: 10, text: "How did I demonstrate trust in Allah’s plan today?", theme: "Tawakkul" },
+      { id: 11, text: "What’s one way I practiced gratitude in my interactions today?", theme: "Gratitude" },
+      { id: 12, text: "How did I overcome a moment of frustration today?", theme: "Patience" },
+      { id: 13, text: "What lesson did I learn from a hadith today?", theme: "Quran" },
+      { id: 14, text: "How did I support a family member or friend today?", theme: "Community" },
+      { id: 15, text: "What’s one habit I want to change to grow closer to Allah?", theme: "Self-Reflection" },
+      { id: 16, text: "How did I feel during my dua today?", theme: "Worship" },
+      { id: 17, text: "What’s one small way I can invite others to Islam tomorrow?", theme: "Dawah" },
+      { id: 18, text: "How did I reflect on Jannah or Jahannam today?", theme: "Akhirah" },
+      { id: 19, text: "What’s one intention I set today for Allah’s sake?", theme: "Ikhlas" },
+      { id: 20, text: "How did I rely on Allah during a difficult moment today?", theme: "Tawakkul" },
+      { id: 21, text: "What’s one thing I’m grateful for in my health today?", theme: "Gratitude" },
+      { id: 22, text: "How did I stay calm when faced with a delay today?", theme: "Patience" },
+      { id: 23, text: "What’s one Quranic story that resonated with me today?", theme: "Quran" },
+      { id: 24, text: "How did I contribute to my community today?", theme: "Community" },
+      { id: 25, text: "What’s one mistake I made today and how can I improve?", theme: "Self-Reflection" },
+      { id: 26, text: "How did I prepare for salah today to make it meaningful?", theme: "Worship" },
+      { id: 27, text: "What’s one quality of the Prophet (PBUH) I tried to emulate today?", theme: "Dawah" },
+      { id: 28, text: "What’s one deed I did today that I hope weighs heavy on my scale?", theme: "Akhirah" },
+      { id: 29, text: "How did I purify my intentions before an action today?", theme: "Ikhlas" },
+      { id: 30, text: "What’s one worry I let go of by trusting Allah today?", theme: "Tawakkul" },
+      { id: 31, text: "What’s one moment of joy I experienced today and why?", theme: "Gratitude" },
+      { id: 32, text: "How did I respond to someone’s anger with patience today?", theme: "Patience" },
+      { id: 33, text: "What’s one ayah I memorized or reflected on today?", theme: "Quran" },
+      { id: 34, text: "How did I show love or respect to a neighbor today?", theme: "Community" },
+      { id: 35, text: "What’s one strength Allah gave me that I used today?", theme: "Self-Reflection" },
+      { id: 36, text: "What’s one sunnah I followed in my worship today?", theme: "Worship" },
+      { id: 37, text: "How did I explain an Islamic value to someone today?", theme: "Dawah" },
+      { id: 38, text: "What’s one way I reminded myself of the Day of Judgment today?", theme: "Akhirah" },
+      { id: 39, text: "What’s one action I took today without seeking praise?", theme: "Ikhlas" },
+      { id: 40, text: "How did I find peace in Allah’s decree today?", theme: "Tawakkul" },
+      { id: 41, text: "What’s one provision from Allah I appreciated today?", theme: "Gratitude" },
+      { id: 42, text: "How did I control my tongue in a heated moment today?", theme: "Patience" },
+      { id: 43, text: "What’s one attribute of Allah I reflected on today?", theme: "Quran" },
+      { id: 44, text: "How did I help someone in need today?", theme: "Community" },
+      { id: 45, text: "What’s one temptation I resisted for Allah’s sake today?", theme: "Self-Reflection" },
+      { id: 46, text: "How did I make my dhikr more heartfelt today?", theme: "Worship" },
+      { id: 47, text: "What’s one way I showed the mercy of Islam today?", theme: "Dawah" },
+      { id: 48, text: "How did I prepare my heart for the Hereafter today?", theme: "Akhirah" },
+      { id: 49, text: "What’s one deed I did today purely for Allah’s reward?", theme: "Ikhlas" },
+      { id: 50, text: "How did I surrender a plan to Allah’s will today?", theme: "Tawakkul" },
+      { id: 51, text: "What’s one family moment I’m grateful for today?", theme: "Gratitude" },
+      { id: 52, text: "How did I wait patiently for an answer today?", theme: "Patience" },
+      { id: 53, text: "What’s one Quranic command I followed today?", theme: "Quran" },
+      { id: 54, text: "How did I strengthen a bond with a Muslim brother/sister today?", theme: "Community" },
+      { id: 55, text: "What’s one area of my life I need to align with Islam?", theme: "Self-Reflection" },
+      { id: 56, text: "How did I focus during my salah today?", theme: "Worship" },
+      { id: 57, text: "What’s one way I clarified a misconception about Islam today?", theme: "Dawah" },
+      { id: 58, text: "What’s one sign of Allah’s mercy I noticed today?", theme: "Akhirah" },
+      { id: 59, text: "How did I ensure my actions were sincere today?", theme: "Ikhlas" },
+      { id: 60, text: "What’s one trial I faced with trust in Allah today?", theme: "Tawakkul" },
+      { id: 61, text: "What’s one opportunity Allah gave me today?", theme: "Gratitude" },
+      { id: 62, text: "How did I avoid reacting impulsively today?", theme: "Patience" },
+      { id: 63, text: "What’s one story of a prophet that inspired me today?", theme: "Quran" },
+      { id: 64, text: "How did I show hospitality to someone today?", theme: "Community" },
+      { id: 65, text: "What’s one goal I set to please Allah today?", theme: "Self-Reflection" },
+      { id: 66, text: "What’s one way I honored the sunnah in my day?", theme: "Worship" },
+      { id: 67, text: "How did I inspire someone to learn about Islam today?", theme: "Dawah" },
+      { id: 68, text: "What’s one way I prepared for my meeting with Allah?", theme: "Akhirah" },
+      { id: 69, text: "What’s one action I took without expecting reward from others?", theme: "Ikhlas" },
+      { id: 70, text: "How did I accept Allah’s qadr today?", theme: "Tawakkul" },
+      { id: 71, text: "What’s one small blessing I noticed today?", theme: "Gratitude" },
+      { id: 72, text: "How did I practice sabr during a test today?", theme: "Patience" },
+      { id: 73, text: "What’s one name of Allah I connected with today?", theme: "Quran" },
+      { id: 74, text: "How did I forgive someone in my community today?", theme: "Community" },
+      { id: 75, text: "What’s one way I can improve my character tomorrow?", theme: "Self-Reflection" },
+      { id: 76, text: "How did I make my fasting or charity meaningful today?", theme: "Worship" },
+      { id: 77, text: "What’s one way I shared Islamic knowledge today?", theme: "Dawah" },
+      { id: 78, text: "What’s one way I remembered the temporary nature of dunya?", theme: "Akhirah" },
+      { id: 79, text: "How did I check my intentions before acting today?", theme: "Ikhlas" },
+      { id: 80, text: "What’s one fear I gave to Allah today?", theme: "Tawakkul" },
+      { id: 81, text: "What’s one thing I learned about my faith today?", theme: "Gratitude" },
+      { id: 82, text: "How did I stay patient with myself today?", theme: "Patience" },
+      { id: 83, text: "What’s one ayah that brought me peace today?", theme: "Quran" },
+      { id: 84, text: "How did I show unity with my community today?", theme: "Community" },
+      { id: 85, text: "What’s one way I can be more mindful of Allah tomorrow?", theme: "Self-Reflection" },
+      { id: 86, text: "How did I honor my parents or elders today?", theme: "Worship" },
+      { id: 87, text: "What’s one way I embodied Islamic manners today?", theme: "Dawah" },
+      { id: 88, text: "How did I reflect on Allah’s signs in nature today?", theme: "Akhirah" },
+      { id: 89, text: "What’s one deed I did in secret for Allah today?", theme: "Ikhlas" },
+      { id: 90, text: "How did I trust Allah’s timing today?", theme: "Tawakkul" },
+      { id: 91, text: "What’s one way Allah protected me today?", theme: "Gratitude" },
+      { id: 92, text: "How did I practice patience in my work or studies today?", theme: "Patience" },
+      { id: 93, text: "What’s one lesson from the Quran I applied today?", theme: "Quran" },
+      { id: 94, text: "How did I encourage someone in my community today?", theme: "Community" },
+      { id: 95, text: "What’s one way I can increase my fear of Allah tomorrow?", theme: "Taqwa" }
     ];
 
-    const IslamicJournal = () => {
-      const [dailyPrompt, setDailyPrompt] = React.useState(null);
-      const [entry, setEntry] = React.useState({
+    function getDailyPrompt() {
+      const today = new Date().toISOString().split('T')[0];
+      const seed = today.split('-').reduce((acc, val) => acc + parseInt(val), 0);
+      const index = seed % prompts.length;
+      return prompts[index];
+    }
+
+    function loadPrompt() {
+      const prompt = getDailyPrompt();
+      document.getElementById('prompt-title').textContent = `Daily Prompt #${prompt.id} (${prompt.theme})`;
+      document.getElementById('prompt-text').textContent = prompt.text;
+      document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    }
+
+    function saveEntry() {
+      const reflection = document.getElementById('reflection').value.trim();
+      if (!reflection) return;
+      const prompt = getDailyPrompt();
+      const entry = {
         date: new Date().toISOString().split('T')[0],
-        reflection: '',
-        dua: '',
-        sketch: ''
+        promptId: prompt.id,
+        theme: prompt.theme,
+        reflection,
+        dua: document.getElementById('dua').value.trim()
+      };
+      const entries = JSON.parse(localStorage.getItem('entries') || '[]');
+      entries.unshift(entry);
+      localStorage.setItem('entries', JSON.stringify(entries));
+      document.getElementById('reflection').value = '';
+      document.getElementById('dua').value = '';
+      updateHistory();
+    }
+
+    function toggleHistory() {
+      const history = document.getElementById('history');
+      const btn = document.querySelector('.history-btn');
+      history.classList.toggle('show');
+      btn.textContent = history.classList.contains('show') ? 'Hide History' : 'Show History';
+    }
+
+    function updateHistory() {
+      const entries = JSON.parse(localStorage.getItem('entries') || '[]');
+      const historyList = document.getElementById('history-list');
+      historyList.innerHTML = entries.length === 0 ? '<p>No entries yet.</p>' : '';
+      entries.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `
+          <p><strong>${entry.date}</strong>: Prompt #${entry.promptId} (${entry.theme})</p>
+          <p>${entry.reflection.substring(0, 50)}...</p>
+          <p><em>Dua:</em> ${entry.dua || 'None'}</p>
+        `;
+        historyList.appendChild(div);
       });
-      const [entries, setEntries] = React.useState(JSON.parse(localStorage.getItem('entries')) || []);
-      const [showHistory, setShowHistory] = React.useState(false);
+    }
 
-      React.useEffect(() => {
-        localStorage.setItem('entries', JSON.stringify(entries));
-      }, [entries]);
+    function exportEntries() {
+      const entries = JSON.parse(localStorage.getItem('entries') || '[]');
+      const dataStr = JSON.stringify(entries, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'journal_entries.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
 
-      React.useEffect(() => {
-        const today = new Date().toISOString().split('T')[0];
-        const lastPromptDate = localStorage.getItem('lastPromptDate');
-        let promptId = localStorage.getItem('dailyPromptId');
-
-        if (lastPromptDate !== today) {
-          promptId = prompts[Math.floor(Math.random() * prompts.length)].id;
-          localStorage.setItem('dailyPromptId', promptId);
-          localStorage.setItem('lastPromptDate', today);
-        }
-
-        const prompt = prompts.find(p => p.id === parseInt(promptId));
-        setDailyPrompt(prompt);
-        setEntry({ date: today, reflection: '', dua: '', sketch: prompt ? prompt.sketch : '' });
-      }, []);
-
-      const handleSubmit = () => {
-        if (!dailyPrompt || !entry.reflection) return;
-        setEntries([...entries, { ...entry, promptId: dailyPrompt.id, theme: dailyPrompt.theme }]);
-        setEntry({ date: new Date().toISOString().split('T')[0], reflection: '', dua: '', sketch: dailyPrompt.sketch });
-      };
-
-      const exportEntries = () => {
-        const dataStr = JSON.stringify(entries, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'journal_entries.json';
-        link.click();
-        URL.revokeObjectURL(url);
-      };
-
-      return (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-2xl font-bold text-green-600 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2a10 10 0 110 20 10 10 0 010-20zm0 0a2 2 0 110 4 2 2 0 010-4z" />
-            </svg>
-            Islamic Daily Journal
-          </h1>
-          {dailyPrompt && (
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">Today’s Prompt (#{dailyPrompt.id})</h2>
-              <p className="text-gray-700 mb-2"><strong>Theme:</strong> {dailyPrompt.theme}</p>
-              <p className="text-gray-700 mb-2"><strong>Prompt:</strong> {dailyPrompt.text}</p>
-              <p className="text-gray-600 mb-4"><strong>Suggested Sketch:</strong> {dailyPrompt.sketch}</p>
-              <label className="block text-gray-700 mb-1">Date</label>
-              <input
-                type="date"
-                className="w-full p-2 border rounded mb-4"
-                value={entry.date}
-                onChange={e => setEntry({ ...entry, date: e.target.value })}
-                disabled
-              />
-              <label className="block text-gray-700 mb-1">Reflection (5 min)</label>
-              <textarea
-                className="w-full p-2 border rounded mb-4"
-                rows="4"
-                value={entry.reflection}
-                onChange={e => setEntry({ ...entry, reflection: e.target.value })}
-                placeholder="Write your reflection..."
-              />
-              <label className="block text-gray-700 mb-1">Dua</label>
-              <input
-                type="text"
-                className="w-full p-2 border rounded mb-4"
-                value={entry.dua}
-                onChange={e => setEntry({ ...entry, dua: e.target.value })}
-                placeholder="e.g., Bismillah, guide my reflections"
-              />
-              <label className="block text-gray-700 mb-1">Sketch Description</label>
-              <input
-                type="text"
-                className="w-full p-2 border rounded mb-4"
-                value={entry.sketch}
-                onChange={e => setEntry({ ...entry, sketch: e.target.value })}
-                placeholder="e.g., Candle with glow"
-              />
-              <button
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                onClick={handleSubmit}
-              >
-                Save Entry
-              </button>
-            </div>
-          )}
-          <div className="flex justify-between mb-4">
-            <button
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              {showHistory ? 'Hide History' : 'Show History'}
-            </button>
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              onClick={exportEntries}
-            >
-              Export Entries
-            </button>
-          </div>
-          {showHistory && (
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-700 mb-2">Entry History</h2>
-              <ul className="list-disc pl-5">
-                {entries.map((e, i) => (
-                  <li key={i} className="text-gray-600">
-                    {e.date}: Prompt #{e.promptId} ({e.theme}) - {e.reflection.slice(0, 30)}...
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      );
-    };
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<IslamicJournal />);
+    // Initialize
+    loadPrompt();
+    updateHistory();
   </script>
 </body>
 </html>
