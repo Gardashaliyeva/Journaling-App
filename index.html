@@ -334,12 +334,15 @@
 
     function exportEntries() {
       const entries = JSON.parse(localStorage.getItem('entries') || '[]');
-      const dataStr = JSON.stringify(entries, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
+      if (entries.length === 0) return;
+      const textContent = entries.map(entry => {
+        return `Date: ${entry.date}\nPrompt #${entry.promptId} (${entry.theme})\nPrompt Text: ${prompts[entry.promptId - 1].text}\nReflection: ${entry.reflection}\nDua: ${entry.dua || 'None'}\n---`;
+      }).join('\n');
+      const blob = new Blob([textContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'journal_entries.json';
+      link.download = 'journal_entries.txt';
       link.click();
       URL.revokeObjectURL(url);
     }
